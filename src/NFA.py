@@ -44,13 +44,12 @@ class NFA:
             stack = list(states)
             while stack:
                 state = stack.pop()
-                for epsilon_state in self.get_target_states(state, None):  # Process epsilon transitions
+                for epsilon_state in self.get_target_states(state, None):
                     if epsilon_state not in closure:
                         closure.add(epsilon_state)
                         stack.append(epsilon_state)
             return closure
 
-        # Start with the epsilon closure of the initial state
         current_states = epsilon_closure({self.initial_state})
         for character in string:
             next_states = set()
@@ -62,28 +61,9 @@ class NFA:
         return any(state in self.final_states for state in current_states)
 
 
-nfa_eps = NFA()
-
-state_0 = nfa_eps.add_state()
-state_1 = nfa_eps.add_state()
-state_2 = nfa_eps.add_state()
-state_3 = nfa_eps.add_state()
-
-nfa_eps.add_transition(state_0, 'a', state_1)
-nfa_eps.add_epsilon_transition(state_1, state_2)
-nfa_eps.add_transition(state_2, 'b', state_3)
-
-nfa_eps.mark_as_initial(state_0)
-nfa_eps.mark_as_final(state_3)
-
-print(nfa_eps.accepts("ab"))  # True
-print(nfa_eps.accepts("a"))  # False
-print(nfa_eps.accepts(""))  # False
-
-
-def import_NFA_from_file(file):     # zadanie 2
-
+def import_NFA_from_file(file):
     nfa = NFA()
+
     with open(file, 'r') as f:
         lines = f.readlines()
 
@@ -92,31 +72,33 @@ def import_NFA_from_file(file):     # zadanie 2
 
     for line in lines:
         parts = line.strip().split()
-        # jesli linia sklada sie z 3 elementow to tworze przejscie
         if len(parts) == 3:
+            # Transition line: state_from, state_to, character
             state_from, state_to, character = int(parts[0]), int(parts[1]), parts[2]
-            transitions.append((state_from, state_to, character))
-        # jesli z jednego to dodaje stany koncowe
+            if character == "<eps>":
+                nfa.add_epsilon_transition(state_from, state_to)
+            else:
+                nfa.add_transition(state_from, character, state_to)
         elif len(parts) == 1:
+            # Final state line
             final_states.add(int(parts[0]))
 
-    # wyznaczenie ilosci stanow
-    max_state = max(max(states[0], states[1]) for states in transitions) if transitions else 0
-    # dodawanie stanow z pliku do obiektu nfa
-    i = 0
-    while i <= max_state:
+    # Add states to NFA
+    max_state = max(max(t[0], t[1]) for t in transitions) if transitions else 0
+    for _ in range(max_state + 1):
         nfa.add_state()
-        i += 1
 
+    # Set initial state
     nfa.mark_as_initial(0)
 
-    for final_state in final_states:
-        nfa.mark_as_final(final_state)
-
-    for state_from, state_to, character in transitions:
-        nfa.add_transition(state_from, character, state_to)
+    # Set final states
+    for state in final_states:
+        nfa.mark_as_final(state)
 
     return nfa
 
 
-import_NFA_from_file()
+imported_nfa = import_NFA_from_file("nfa.txt")
+print(imported_nfa.accepts("ba"))  # True
+print(imported_nfa.accepts("b"))   # False
+print(imported_nfa.accepts("a"))   # True
