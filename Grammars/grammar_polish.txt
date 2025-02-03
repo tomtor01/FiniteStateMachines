@@ -1,0 +1,11 @@
+S -> NP VP | VP NP
+NPa -> "pies" | "kot" | "dziecko"
+NPb -> "kota"
+NPc -> "dziecku" | "domu"
+NP -> NPa | NPb | NPc
+NP -> NP "i" NP
+VP -> V | V NP | V NP PP | V PP
+VP -> V "i" V
+V -> "biegnie" | "siedzi" | "widzi"
+PP -> P NP
+P -> "na" | "w"
